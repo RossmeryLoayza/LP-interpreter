@@ -124,6 +124,7 @@ proc {ExecuteStatement Stack}	% Executes each kernel statement
 			NewEnv
 			NewStack
 			AuxStack
+			Y
 			Stmt#E|OutStack = {PopSemStack Stack}
 			case Stmt
 			of skipStmt then
@@ -148,11 +149,17 @@ proc {ExecuteStatement Stack}	% Executes each kernel statement
 				{BindLocnValInStore L_X2 X2}
 				Env = {AddMappingE [X1#L_X1 X2#L_X2] E}
 				S = {MakeEmptyStack}
-				OutStack = {PushSemStack Program#Env S}
+				OutStack = {PushSemStack $#Env S}
 				NewStack = OutStack
 			[] valeqStmt(X V) then
-				
+				Y = V
+				L_Y = {NewLocnInStore}
+				{BindLocnValInStore L_Y Y}
+				Env = {AddMappingE [Y#L_Y] E}
+				S = {MakeEmptyStack}
+				OutStack = {PushSemStack $#Env S}
 				NewStack = OutStack
+				X = Y
 			[] ifStmt(X S1 S2) then
 				{Value.'==' S1 S2 X}
 				{Procedure.is X B}
