@@ -141,8 +141,17 @@ proc {ExecuteStatement Stack}	% Executes each kernel statement
 				myEnv = {AddMappingE [X#S] Env}
 				NewStack = {PushSemStack X#myEnv OutStack}
 			[] vareqStmt(X1 X2) then
+				%X1 = X2
+				L_X1 = {NewLocnInStore}
+				{BindLocnValInStore L_X1 X1}
+				L_X2 = {NewLocnInStore}
+				{BindLocnValInStore L_X2 X2}
+				Env = {AddMappingE [X1#L_X1 X2#L_X2] E}
+				S = {MakeEmptyStack}
+				OutStack = {PushSemStack Program#Env S}
 				NewStack = OutStack
 			[] valeqStmt(X V) then
+				
 				NewStack = OutStack
 			[] ifStmt(X S1 S2) then
 				{Value.'==' S1 S2 X}
