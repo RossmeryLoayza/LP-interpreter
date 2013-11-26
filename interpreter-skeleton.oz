@@ -189,6 +189,17 @@ fun {CreateVal V E}             % Creates a value as defined by the BNF for <v> 
    % only the free identifiers used in the body of the procedure MINUS the formal parameters.
    % The utility {U.subtractList FreeIdents Formals} together with the Free procedure
    % defined below will make this easy to do.  
+	local 
+		Env
+		Dest
+	if V.IsNumber then
+		{Value.'=' $ V}
+	else
+		Env = {NewEnv}
+		SubtractList {{FreeVars $ Dest}}
+		
+	end
+	
 end
 
 
