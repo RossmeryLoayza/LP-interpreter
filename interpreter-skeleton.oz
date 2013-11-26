@@ -136,6 +136,10 @@ proc {ExecuteStatement Stack}	% Executes each kernel statement
 				{Procedure.apply {LookupInStore {LookupInEnv X E}} Args}
 				NewStack = OutStack
 			[] seqStmt(S1 S2) then 
+				L_S1 = {NewLocnInStore}
+				{BindLocnValInStore L_S1 S1}
+				L_S2 = {NewLocnInStore}
+				{BindLocnValInStore L_S2 S2}
 				NewStack = OutStack
 			[] newvarStmt(X S) then
 				Env = {NewEnv}
