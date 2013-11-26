@@ -145,6 +145,8 @@ proc {ExecuteStatement Stack}	% Executes each kernel statement
 			[] valeqStmt(X V) then
 				NewStack = OutStack
 			[] ifStmt(X S1 S2) then
+				{Value.'==' S1 S2 X}
+				{Procedure.is X B}
 				NewStack = OutStack
 			[] fappStmt(X Ys) then
 				NewStack = OutStack
