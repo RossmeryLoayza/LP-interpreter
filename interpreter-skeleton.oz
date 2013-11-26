@@ -72,7 +72,41 @@ proc {ExecuteProgram Program}   % Calls ExecuteStatement with an initial semanti
    % {BindLocnValInStore L Show}
    % E={NewEnv}
    % NewE={AddMappingE [cout#L] E}  %Note: The #-sign creates a pair.  It translates to a tuple having '#' as the label.
+   
+   local stack, myenv, MySemStat, L in
+      stack = {MakeEmptyStack}
+      myenv = {NewEnv}
+      L={NewLocnInStore}
+      {BindLocnValInStore L Show}
+      NewE={AddMappingE [cout#L] myenv}
+      SS={NewLocnInStore}
+      {BindLocnValInStore SS Value.'=='}
+      NewE={AddMappingE ['=='#SS] myenv}
+      S={NewLocnInStore}
+      {BindLocnValInStore S Value.'+'}
+      NewE={AddMappingE ['+'#S] myenv}
+      R={NewLocnInStore}
+      {BindLocnValInStore R Value.'-'}
+      NewE={AddMappingE ['-'#R] myenv}
+      M={NewLocnInStore}
+      {BindLocnValInStore M Value.'*'}
+      NewE={AddMappingE ['*'#M] myenv}
+      D={NewLocnInStore}
+      {BindLocnValInStore D Value.'/'}
+      NewE={AddMappingE ['/'#D] myenv}
+      Me={NewLocnInStore}
+      {BindLocnValInStore Me Value.'<'}
+      NewE={AddMappingE ['<'#Me] myenv}
+      Ma={NewLocnInStore}
+      {BindLocnValInStore Ma Value.'>'}
+      NewE={AddMappingE ['>'#Ma] myenv}
+      MySemStat = Program#NewE
+      ExecuteStatement {PushSemStack MySemStat stack}}
+	  
+	  
 end
+
+
 proc {ExecuteStatement Stack}   % Executes each kernel statement
 %%% FILL IN %%%%%%%%%%%%%%%%%%%%%
    % Check if stack is empty
