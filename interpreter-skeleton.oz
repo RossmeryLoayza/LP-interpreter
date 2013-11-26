@@ -60,82 +60,102 @@ ExecuteProgram
 ExecuteStatement
 CreateVal
 
-proc {ExecuteProgram Program}   % Calls ExecuteStatement with an initial semantic stack
+proc {ExecuteProgram Program}	% Calls ExecuteStatement with an initial semantic stack
 %%% FILL IN %%%%%%%%%%%%%%%%%%%%%
-   % You may pre-stock the store and environment with a handful of primitives like
-   % cout and arithmetic operators.  You can do this by creating a location in the store
-   % for each (prefix) operator, adding the name of the prefix operator to that location
-   % in the environment, and then binding the store location to the appropriate Oz procedure.
-   % For example, to pre-stock cout:
-   % local
-   % L={NewLocnInStore}
-   % {BindLocnValInStore L Show}
-   % E={NewEnv}
-   % NewE={AddMappingE [cout#L] E}  %Note: The #-sign creates a pair.  It translates to a tuple having '#' as the label.
-   
-   local stack, myenv, MySemStat, L in
-      stack = {MakeEmptyStack}
-      myenv = {NewEnv}
-      L={NewLocnInStore}
-      {BindLocnValInStore L Show}
-      NewE={AddMappingE [cout#L] myenv}
-      SS={NewLocnInStore}
-      {BindLocnValInStore SS Value.'=='}
-      NewE={AddMappingE ['=='#SS] myenv}
-      S={NewLocnInStore}
-      {BindLocnValInStore S Value.'+'}
-      NewE={AddMappingE ['+'#S] myenv}
-      R={NewLocnInStore}
-      {BindLocnValInStore R Value.'-'}
-      NewE={AddMappingE ['-'#R] myenv}
-      M={NewLocnInStore}
-      {BindLocnValInStore M Value.'*'}
-      NewE={AddMappingE ['*'#M] myenv}
-      D={NewLocnInStore}
-      {BindLocnValInStore D Value.'/'}
-      NewE={AddMappingE ['/'#D] myenv}
-      Me={NewLocnInStore}
-      {BindLocnValInStore Me Value.'<'}
-      NewE={AddMappingE ['<'#Me] myenv}
-      Ma={NewLocnInStore}
-      {BindLocnValInStore Ma Value.'>'}
-      NewE={AddMappingE ['>'#Ma] myenv}
-      MySemStat = Program#NewE
-      ExecuteStatement {PushSemStack MySemStat stack}}
-	  
-	  
+	% You may pre-stock the store and environment with a handful of primitives like
+	% cout and arithmetic operators. You can do this by creating a location in the store
+	% for each (prefix) operator, adding the name of the prefix operator to that location
+	% in the environment, and then binding the store location to the appropriate Oz procedure.
+	% For example, to pre-stock cout:
+	% local
+	% L = {NewLocnInStore}
+	% {BindLocnValInStore L Show}
+	% E = {NewEnv}
+	% NewE = {AddMappingE [cout#L] E} %Note: The #-sign creates a pair. It translates to a tuple having '#' as the label.
+
+	local
+		E = {NewEnv}
+		L1 = {NewLocnInStore}
+		{BindLocnValInStore L1 Show}
+		L2 = {NewLocnInStore}
+		{BindLocnValInStore L2 Number.'+'}
+		L3 = {NewLocnInStore}
+		{BindLocnValInStore L3 Number.'-'}
+		L4 = {NewLocnInStore}
+		{BindLocnValInStore L4 Number.'*'}
+		L5 = {NewLocnInStore}
+		{BindLocnValInStore L5 Value.'=='}
+		L6 = {NewLocnInStore}
+		{BindLocnValInStore L6 Int.'div'}
+		Env = {AddMappingE [cout#L1 '+'#L2 '-'#L3 '*'#L4 '=='#L5 '/'#L6] E}
+		S = {MakeEmptyStack}
+		SF = {PushSemStack Program#Env S}
+	in
+		{Show "------------------------------------------------------"}
+		{Show "Ejecutando"}
+		{ExecuteStatement SF}
+		{Show "Finalizado"}
+	end
 end
 
-
-proc {ExecuteStatement Stack}   % Executes each kernel statement
+proc {ExecuteStatement Stack}	% Executes each kernel statement
 %%% FILL IN %%%%%%%%%%%%%%%%%%%%%
-   % Check if stack is empty
-   % If not, pop top statement off of the stack
-   % Use a case statement to figure out which statement it is
-   % Use the semantics defined in Section 2.4 of the textbook to execute
-   % each statement. Each branch of the case should return the stack that
-   % results from executing that statement.  The new stack will be passed as
-   % the argument of the tail recursive call to ExecuteStatement.
-   % Below are the semantics for built-in primitives defined for you.  (They have
-   % the same concrete syntax as user-defined function calls, but the parser will figure
-   % out which functions are defined by the user and which are built-in, and assign
-   % different abstract syntax to each as appropriate.)
-   % ****IMPLEMENTATION HINTS: *****
-   % The store operations already handle the single-assignment semantics, so
-   % you don't have to.
-   % fappStmt: Consider using List.zip (see online Oz documentation); otherwise write your own
-   %           recursive function to lookup actual args and pair them with formals.
-   
-   case %Stmt
-   of fprim(X Ys) then
-      Args={Map Ys fun {$ Y} {LookupInStore {LookupInEnv Y E}} end} in
-      {Procedure.apply {LookupInStore {LookupInEnv X E}} Args} 
-      %NewStack
-   [] % stmtPattern ...
-   end
-   
-   % Recursive call to ExecuteStatement with new Stack (if non-empty)
+	% Check if stack is empty
+	% If not, pop top statement off of the stack
+	% Use a case statement to figure out which statement it is
+	% Use the semantics defined in Section 2.4 of the textbook to execute
+	% each statement. Each branch of the case should return the stack that
+	% results from executing that statement. The new stack will be passed as
+	% the argument of the tail recursive call to ExecuteStatement.
+	% Below are the semantics for built-in primitives defined for you. (They have
+	% the same concrete syntax as user-defined function calls, but the parser will figure
+	% out which functions are defined by the user and which are built-in, and assign
+	% different abstract syntax to each as appropriate.)
+	% ****IMPLEMENTATION HINTS: *****
+	% The store operations already handle the single-assignment semantics, so
+	% you don't have to.
+	% fappStmt: Consider using List.zip (see online Oz documentation); otherwise write your own
+	%			recursive function to lookup actual args and pair them with formals.
+	
+	if {Not {StackIsEmpty Stack}} then
+		
+		local
+			L
+			NewEnv
+			NewStack
+			AuxStack
+			Stmt#E|OutStack = {PopSemStack Stack}
+			case Stmt
+			of skipStmt then
+				{Show " > skipStmt"}
+				NewStack = OutStack
+			[] fprim(X Ys) then
+				Args = {Map Ys fun {$ Y} {LookupInStore {LookupInEnv Y E}} end} in
+				{Show " > fprim"}
+				{Procedure.apply {LookupInStore {LookupInEnv X E}} Args}
+				NewStack = OutStack
+			[] seqStmt(S1 S2) then 
+				NewStack = OutStack
+			[] newvarStmt(X S) then
+				Env = {NewEnv}
+				myEnv = {AddMappingE [X#S] Env}
+				NewStack = {PushSemStack X#myEnv OutStack}
+			[] vareqStmt(X1 X2) then
+				NewStack = OutStack
+			[] valeqStmt(X V) then
+				NewStack = OutStack
+			[] ifStmt(X S1 S2) then
+				NewStack = OutStack
+			[] fappStmt(X Ys) then
+				NewStack = OutStack
+			end
+			% Recursive call to ExecuteStatement with new Stack (if non-empty)
+		in
+			{ExecuteStatement NewStack} 
+		end
+	end
 end
+
 Free
 fun {CreateVal V E}             % Creates a value as defined by the BNF for <v> above
 %%% FILL IN %%%%%%%%%%%%%%%%%%%%%
@@ -148,6 +168,7 @@ fun {CreateVal V E}             % Creates a value as defined by the BNF for <v> 
    % The utility {U.subtractList FreeIdents Formals} together with the Free procedure
    % defined below will make this easy to do.  
 end
+
 
 % The code below creates the procedure {Free Stmt} that returns a list of the identifiers
 % that are free in Stmt.  It will be needed by CreateVal above in creating a procedure value.
@@ -192,43 +213,63 @@ local
       [] fprim(ExternalProcedure Args) then
 	 {AddList Dest ExternalProcedure|Args}
       end
+	  
    end
 in
    fun {Free St}
       Dest=freevars() in
       {Record.arity {FreeVars St Dest}}
    end
+   
+   
 end
+
+%%%%
 
 %% Abstract Syntax of Example programs.
 %% ---YOU WILL NEED TO WRITE SOME ADDITIONAL ONES TO COMPLETELY TEST YOUR CODE
-Program1=skipStmt
-Program2=newvarStmt('x' seqStmt(valeqStmt('x' 3) fprim(cout ['x'])))
+Program1 = newvarStmt('x' seqStmt(valeqStmt('x' false) seqStmt(ifStmt('x' skipStmt skipStmt) skipStmt)))
+Program2 = newvarStmt('x' seqStmt(valeqStmt('x' 26) fprim(cout ['x'])))
 %The following programs are from HW 4 Q# 5
-P1=newvarStmt('x'
-	      seqStmt(seqStmt(valeqStmt('x' 1)
-			      newvarStmt('x'
-					 seqStmt(valeqStmt('x' 2)
-						 fprim('cout' ['x']))))
-		      fprim('cout' ['x'])))
-P2a=newvarStmt('Res'
-	       seqStmt(newvarStmt('Arg1'
-				  newvarStmt('Arg2'
-					     seqStmt(seqStmt(valeqStmt('Arg1' 7)
-							     valeqStmt('Arg2' 6))
-						     fprim('*' ['Arg1' 'Arg2' 'Res']))))
-		       fprim('cout' ['Res'])))
-P3=newvarStmt('X'
-	      newvarStmt('xtimesy'
-			 newvarStmt('tmp1'
-				    newvarStmt('tmp2'
-					       seqStmt(seqStmt(valeqStmt('X' 2)
-							       valeqStmt('xtimesy'
-									 fdef(['Y' 'Res']
-									      fprim('*' ['X' 'Y' 'Res']))))
-						       seqStmt(seqStmt(valeqStmt('tmp1' 3)
-								       fappStmt('xtimesy' ['tmp1' 'tmp2']))
-							       fprim('cout' ['tmp2'])))))))
-						       
-in {ExecuteProgram Program2} % Call to execute a program
+P = newvarStmt('x' newvarStmt('y' seqStmt(valeqStmt('x' 3) vareqStmt('y' 'x'))))
 
+
+P1 = newvarStmt('x'
+			seqStmt(seqStmt(valeqStmt('x' 1)
+					newvarStmt('x'
+					seqStmt(valeqStmt('x' 2)
+						fprim('cout' ['x']))))
+				fprim('cout' ['x'])))
+P2 = newvarStmt('Res'
+			seqStmt(
+				newvarStmt('Arg1'
+					newvarStmt('Arg2'
+						seqStmt(
+							seqStmt(
+								valeqStmt('Arg1' 7)
+								valeqStmt('Arg2' 6))
+							fprim('*' ['Arg1' 'Arg2' 'Res']))))
+						fprim('cout' ['Res'])))
+P3 = newvarStmt('X'
+			newvarStmt('xtimesy'
+			newvarStmt('tmp1'
+					newvarStmt('tmp2'
+							seqStmt(seqStmt(valeqStmt('X' 2)
+									valeqStmt('xtimesy'
+									fdef(['Y' 'Res']
+											seqStmt(fprim('cout' ['Y']) fprim('*' ['X' 'Y' 'Res'])))))
+								seqStmt(seqStmt(valeqStmt('tmp1' 3)
+										fappStmt('xtimesy' ['tmp1' 'tmp2']))
+									fprim('cout' ['tmp2'])))))))
+
+								
+
+{ExecuteProgram Program1} % Call to execute a program
+{ExecuteProgram Program2}
+{ExecuteProgram P}
+{ExecuteProgram P1}
+{ExecuteProgram P2}
+{ExecuteProgram P3}
+
+{Application.exit 0}
+end
